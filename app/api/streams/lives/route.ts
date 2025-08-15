@@ -22,15 +22,15 @@ export async function GET(request:NextRequest,) {
   }
 }
 
-export async function PATCH(request, { params }) {
+export async function PATCH(request:NextRequest) {
   try {
     await connectdb()
-
+    const id = String(request.nextUrl.searchParams.get("id"))
     const updateData = await request.json()
 
     const result = await Stream.updateOne(
       {
-        $or: [{ _id: mongoose.Types.ObjectId.isValid(params.id) ? params.id : null }, { streamId: params.id }],
+        $or: [{ _id: mongoose.Types.ObjectId.isValid(id) ? id : null }, { streamId: id }],
       },
       {
         ...updateData,
@@ -49,12 +49,12 @@ export async function PATCH(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request:NextRequest) {
   try {
     await connectdb()
-
+    const id  = String(request.nextUrl.searchParams.get("id"))
     const result = await Stream.deleteOne({
-      $or: [{ _id: mongoose.Types.ObjectId.isValid(params.id) ? params.id : null }, { streamId: params.id }],
+      $or: [{ _id: mongoose.Types.ObjectId.isValid(id) ? id : null }, { streamId: id }],
     })
 
     if (result.deletedCount === 0) {
