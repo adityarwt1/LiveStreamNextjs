@@ -6,7 +6,6 @@ import { io } from "socket.io-client"
 
 export default function StreamViewerPage() {
   const params = useParams()
-  
   const streamId = params.id
 
   const [streamData, setStreamData] = useState(null)
@@ -41,12 +40,12 @@ export default function StreamViewerPage() {
   useEffect(() => {
     if (remoteStream && videoRef.current) {
       videoRef.current.srcObject = remoteStream
+      videoRef.current.play().catch(console.error)
       console.log("[Viewer] Set remote stream to video element")
     }
   }, [remoteStream])
 
   useEffect(() => {
-    // Auto-scroll chat to bottom
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
@@ -94,7 +93,6 @@ export default function StreamViewerPage() {
       window.location.href = "/"
     })
 
-    // Load recent chat messages
     loadChatHistory()
   }
 
@@ -118,7 +116,6 @@ export default function StreamViewerPage() {
 
     setShowUsernameModal(false)
 
-    // Connect to WebRTC stream
     const success = await connect()
     if (success) {
       console.log("[Viewer] Successfully connected to stream")
@@ -142,14 +139,14 @@ export default function StreamViewerPage() {
   const getConnectionStatusColor = () => {
     switch (connectionState) {
       case "connected":
-        return "var(--accent-gold)"
+        return "text-green-500"
       case "connecting":
-        return "var(--primary-red)"
+        return "text-yellow-500"
       case "failed":
       case "disconnected":
-        return "#dc2626"
+        return "text-red-500"
       default:
-        return "var(--text-light)"
+        return "text-gray-500"
     }
   }
 
@@ -170,287 +167,239 @@ export default function StreamViewerPage() {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: "60px 20px", textAlign: "center" }}>
-        <div className="loading"></div>
-        <p style={{ marginTop: "16px", color: "var(--text-light)" }}>Loading stream...</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading stream...</p>
+        </div>
       </div>
     )
   }
 
   if (!streamData) {
     return (
-      <div className="container" style={{ padding: "60px 20px", textAlign: "center" }}>
-        <h1 className="h2" style={{ marginBottom: "16px", color: "var(--text-light)" }}>
-          Stream Not Found
-        </h1>
-        <p style={{ color: "var(--text-light)", marginBottom: "24px" }}>This stream may have ended or doesn't exist.</p>
-        <a href="/" className="btn btn-primary">
-          Browse Other Streams
-        </a>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Stream Not Found</h1>
+          <p className="text-gray-600 mb-6">This stream may have ended or doesn't exist.</p>
+          <a
+            href="/"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Browse Other Streams
+          </a>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container" style={{ padding: "20px" }}>
+    <div className="min-h-screen bg-gray-100">
       {/* Username Modal */}
       {showUsernameModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div className="card" style={{ maxWidth: "400px", width: "90%" }}>
-            <h2 className="h3" style={{ marginBottom: "16px", textAlign: "center" }}>
-              Join Stream
-            </h2>
-            <p style={{ color: "var(--text-light)", marginBottom: "20px", textAlign: "center" }}>
-              Enter a username to join the chat and watch the stream
-            </p>
-            <div className="form-group">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <svg className="w-16 h-16 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Join Stream</h2>
+              <p className="text-gray-600">Enter a username to join the chat and watch the stream</p>
+            </div>
+            <div className="space-y-4">
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyPress={(e) => e.key === "Enter" && handleJoinStream()}
                 autoFocus
               />
+              <button
+                onClick={handleJoinStream}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+              >
+                Join Stream
+              </button>
             </div>
-            <button onClick={handleJoinStream} className="btn btn-primary" style={{ width: "100%" }}>
-              Join Stream
-            </button>
           </div>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", alignItems: "start" }}>
-        {/* Video Player Section */}
-        <div>
-          <div className="video-container" style={{ marginBottom: "20px" }}>
-            <video
-              ref={videoRef}
-              className="video-player"
-              autoPlay
-              playsInline
-              controls={false}
-              style={{ background: "#000" }}
-            />
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Video Player Section */}
+          <div className="lg:col-span-3">
+            <div className="bg-black rounded-xl overflow-hidden shadow-lg relative aspect-video">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                autoPlay
+                playsInline
+                controls={false}
+              />
 
-            {/* Video Overlay */}
-            <div
-              style={{
-                position: "absolute",
-                top: "12px",
-                left: "12px",
-                display: "flex",
-                gap: "8px",
-                alignItems: "center",
-              }}
-            >
-              <div className="live-indicator">LIVE</div>
-              <div
-                style={{
-                  background: "rgba(0, 0, 0, 0.7)",
-                  color: "white",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "0.75rem",
-                }}
-              >
-                {viewerCount} viewers
+              {/* Video Overlay */}
+              <div className="absolute top-4 left-4 flex items-center space-x-2">
+                <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-2"></div>
+                  LIVE
+                </div>
+                <div className="bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm">
+                  {viewerCount} viewers
+                </div>
               </div>
+
+              {/* Connection Status */}
+              <div className="absolute top-4 right-4">
+                <div className="bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${connectionState === 'connected' ? 'bg-green-500' : connectionState === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
+                  <span className={getConnectionStatusColor()}>{getConnectionStatusText()}</span>
+                </div>
+              </div>
+
+              {/* Loading/Error States */}
+              {!remoteStream && !error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                  <div className="text-center text-white">
+                    {isConnecting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                        <p className="text-lg">Connecting to stream...</p>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-lg">Waiting for stream...</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                  <div className="text-center text-white">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p className="text-lg mb-2">Connection Error</p>
+                    <p className="text-sm text-gray-400 mb-4">{error}</p>
+                    <button
+                      onClick={connect}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      disabled={isConnecting}
+                    >
+                      Retry Connection
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Connection Status */}
-            <div
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "rgba(0, 0, 0, 0.7)",
-                color: getConnectionStatusColor(),
-                padding: "4px 8px",
-                borderRadius: "4px",
-                fontSize: "0.75rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-              }}
-            >
-              <div
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: getConnectionStatusColor(),
-                }}
-              ></div>
-              {getConnectionStatusText()}
+            {/* Stream Info */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">{streamData.title}</h1>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-gray-600 mb-1">
+                    Streamed by <span className="font-semibold text-gray-900">{streamData.streamerName}</span>
+                  </p>
+                  <p className="text-sm text-gray-500">Category: {streamData.category}</p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center text-red-600 font-semibold">
+                    <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    </svg>
+                    {viewerCount} watching
+                  </div>
+                </div>
+              </div>
+              {streamData.description && (
+                <p className="text-gray-700 leading-relaxed">{streamData.description}</p>
+              )}
             </div>
+          </div>
 
-            {/* Loading/Error States */}
-            {!remoteStream && !error && (
+          {/* Chat Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-lg h-[600px] flex flex-col">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Live Chat
+                </h3>
+              </div>
+
+              {/* Chat Messages */}
               <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  textAlign: "center",
-                  color: "white",
-                }}
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-4 space-y-3"
               >
-                {isConnecting ? (
-                  <>
-                    <div className="loading" style={{ marginBottom: "16px" }}></div>
-                    <p>Connecting to stream...</p>
-                  </>
+                {chatMessages.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <p>No messages yet</p>
+                    <p className="text-sm">Be the first to say hello!</p>
+                  </div>
                 ) : (
-                  <>
-                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}>📺</div>
-                    <p>Waiting for stream...</p>
-                  </>
+                  chatMessages.map((msg, index) => (
+                    <div key={index} className="break-words">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-semibold text-blue-600 text-sm">{msg.username}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-800 leading-relaxed">{msg.message}</p>
+                    </div>
+                  ))
                 )}
               </div>
-            )}
 
-            {error && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  textAlign: "center",
-                  color: "white",
-                }}
-              >
-                <div style={{ fontSize: "3rem", marginBottom: "16px" }}>⚠️</div>
-                <p>Connection Error</p>
-                <p style={{ fontSize: "0.875rem", opacity: 0.8 }}>{error}</p>
-                <button
-                  onClick={connect}
-                  className="btn btn-primary"
-                  style={{ marginTop: "16px" }}
-                  disabled={isConnecting}
-                >
-                  Retry Connection
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Stream Info */}
-          <div className="card">
-            <h1 className="h2" style={{ marginBottom: "12px" }}>
-              {streamData.title}
-            </h1>
-            <div
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}
-            >
-              <div>
-                <p style={{ color: "var(--text-light)", marginBottom: "4px" }}>
-                  Streamed by <strong>{streamData.streamerName}</strong>
-                </p>
-                <p style={{ color: "var(--text-light)", fontSize: "0.875rem" }}>Category: {streamData.category}</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div className="stream-viewers">
-                  <span>👁</span>
-                  <span>{viewerCount} watching</span>
-                </div>
+              {/* Chat Input */}
+              <div className="p-4 border-t border-gray-200">
+                <form onSubmit={sendChatMessage} className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    disabled={!isConnected}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim() || !isConnected}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </form>
+                {!isConnected && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Connect to stream to chat
+                  </p>
+                )}
               </div>
             </div>
-            {streamData.description && (
-              <p style={{ color: "var(--text-dark)", lineHeight: "1.5" }}>{streamData.description}</p>
-            )}
           </div>
-        </div>
-
-        {/* Chat Section */}
-        <div className="card" style={{ height: "600px", display: "flex", flexDirection: "column" }}>
-          <h3 className="h4" style={{ marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid #e5e7eb" }}>
-            Live Chat
-          </h3>
-
-          {/* Chat Messages */}
-          <div
-            ref={chatContainerRef}
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              marginBottom: "16px",
-              padding: "8px",
-              background: "#f9fafb",
-              borderRadius: "8px",
-            }}
-          >
-            {chatMessages.length === 0 ? (
-              <p style={{ color: "var(--text-light)", textAlign: "center", padding: "20px" }}>
-                No messages yet. Be the first to say hello!
-              </p>
-            ) : (
-              chatMessages.map((msg, index) => (
-                <div key={index} style={{ marginBottom: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <strong style={{ color: "var(--primary-red)", fontSize: "0.875rem" }}>{msg.username}</strong>
-                    <span style={{ color: "var(--text-light)", fontSize: "0.75rem" }}>
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: "0.875rem", lineHeight: "1.4" }}>{msg.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Chat Input */}
-          <form onSubmit={sendChatMessage} style={{ display: "flex", gap: "8px" }}>
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="form-input"
-              style={{ flex: 1 }}
-              disabled={!isConnected}
-            />
-            <button type="submit" className="btn btn-primary" disabled={!newMessage.trim() || !isConnected}>
-              Send
-            </button>
-          </form>
-
-          {!isConnected && (
-            <p style={{ color: "var(--text-light)", fontSize: "0.75rem", marginTop: "8px", textAlign: "center" }}>
-              Connect to stream to chat
-            </p>
-          )}
         </div>
       </div>
-
-      {/* Related Streams */}
-      <section style={{ marginTop: "60px" }}>
-        <h2 className="h3" style={{ marginBottom: "24px" }}>
-          Other Live Streams
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
-          {/* This would be populated with other live streams */}
-          <div className="card" style={{ textAlign: "center", padding: "40px" }}>
-            <p style={{ color: "var(--text-light)" }}>Loading other streams...</p>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }
