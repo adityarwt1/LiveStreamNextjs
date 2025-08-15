@@ -93,7 +93,7 @@ const [streamData, setStreamData] = useState({
 
       // Update stream status in database
       if (streamId) {
-        await fetch(`/api/streams/${streamId}`, {
+        await fetch(`/api/streams/lives?id=${streamId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
